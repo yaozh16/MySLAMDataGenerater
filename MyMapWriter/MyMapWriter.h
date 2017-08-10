@@ -9,15 +9,10 @@
 #include <iomanip>
 #include <vector>
 using namespace std;
-typedef unsigned short maptype;
-typedef struct
-{
-    int x;
-    int y;
-} Point;
+typedef BYTE maptype;
+
 class MyMapWriter
 {
-
 public:
     enum outputType {BMP};
     MyMapWriter(std::string fileName,int width,int height,
@@ -75,11 +70,18 @@ int MyMapWriter::Write()
     BITMAPINFOHEADER bmpInfoHeader;
     int step;
     int offset;
-    unsigned char pixVal = '\0';
+    maptype pixVal = '\0';
     int i, j;
     RGBQUAD* quad;
     std::string path=fileDirectory+fileName;
+    cout<<"Opening...";
     pf.open(path.c_str(),ios_base::binary|ios_base::out);
+    if(pf.is_open())
+        cout<<"Done"<<endl;
+    else
+    {
+        cout<<"Fail"<<endl;
+    }
     bmpFileHeader.bfType=0x4D42;
 
     if (channel == 3)//24位，通道，彩图
@@ -87,10 +89,8 @@ int MyMapWriter::Write()
         cout<<"output from 24bit map...";
         step =channel*width;
         offset = step%4;
-        if (offset != 0)
-        {
-            step += 4-offset;
-        }
+        offset =(4-offset)%4;
+        step += 4-offset;
 
         bmpFileHeader.bfSize =height*step + 54;
         bmpFileHeader.bfReserved1 = 0;
@@ -113,8 +113,8 @@ int MyMapWriter::Write()
 
         pixelDataOffset=pf.tellp();
 
-        cout<<"setting pixels..."<<endl;
-        cout<<"output "<<fileName<<"..."<<std::setw(4)<<100<<"% left...";
+        cout<<"Writing pixels..."<<endl;
+        cout<<"Output To "<<fileName<<"..."<<std::setw(4)<<100<<"% left...";
         for(int tem=0;tem<13;tem++)
             cout<<"\b";
         /////////////////////
@@ -124,7 +124,7 @@ int MyMapWriter::Write()
         //789
         //      (x,y)在(x*channel+(height-y)*step)
         ///////////////////
-        for (i=height-1; i>-1; i--)
+        for (i=height-1; i>=0; i--)
         {
             cout<<std::setw(4)<<int(double(i+1)/double(height)*100)<<"% left...";
             for (j=0; j<width; j++)
@@ -148,7 +148,8 @@ int MyMapWriter::Write()
         cout<<"Done         "<<endl;
         if(!Trajectory.empty())
         {
-            unsigned char Marker[3]={MarkerColor.rgbBlue,MarkerColor.rgbGreen,MarkerColor.rgbRed};
+            cout<<"Marking trajectory...";
+            unsigned char Marker[3]={(short)MarkerColor.rgbBlue,(short)MarkerColor.rgbGreen,(short)MarkerColor.rgbRed};
             for(auto iter:Trajectory)
             {
                 for(int px=iter.x-MarkerWidth+1;px<iter.x+MarkerWidth;px++)
@@ -165,6 +166,7 @@ int MyMapWriter::Write()
                             }
                         }
             }
+            cout<<"Done"<<endl;
         }
     }
     else if (channel == 1)//8位，单通道，灰度图
@@ -172,10 +174,8 @@ int MyMapWriter::Write()
         cout<<"8bit map...\n";
         step = width;
         offset = step%4;
-        if (offset != 4)
-        {
-            step += 4-offset;
-        }
+        offset =(4-offset)%4;
+        step += 4-offset;
 
         bmpFileHeader.bfSize = 54 + 256*4 +  width;
         bmpFileHeader.bfReserved1 = 0;
