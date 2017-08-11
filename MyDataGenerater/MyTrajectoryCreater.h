@@ -7,6 +7,7 @@
 using maptype=BYTE;
 
 
+
 class MyTrajectoryCreater
 {
 private:
@@ -20,14 +21,14 @@ public:
     {
         bool err;                   //是否出错
         int step;
-        Point oringin;              //起点
-        Point final;                //终点
+        Point Pfinal;              //起点
+        Point Pstart;                //终点
         int AvoidRadius;            //回避半径
         vector<Point> Trajectory;   //路径
     };
-    MyTrajectoryCreater(){height=0;midValue=127;maxAvoidRadius=1000;stepMap=NULL;report.err=false;}
+    MyTrajectoryCreater(int maxAvoidRadius=10,int midValue=127):maxAvoidRadius(maxAvoidRadius),midValue(midValue){height=0;stepMap=NULL;report.err=false;}
     ~MyTrajectoryCreater(){ReleaseMaps();}
-    MyTrajectoryMessage Create(maptype* _mapData,int _width,int _height,Point _origin,Point _final);
+    MyTrajectoryMessage Create(maptype* mapData,int width,int height,Point startPoint,Point finalPoint);
 private:
     MyTrajectoryMessage report;
     maptype* pmapData;
@@ -38,7 +39,7 @@ private:
     unsigned short* stepMap;           //标记步数使用的地图
     int width;
     int height;
-    static Point direction[4];
+
     struct Swifter  //扫描器
     {
         int Start;
@@ -56,16 +57,18 @@ private:
     };
     vector<Swifters> MySw;
     void AutoConfigSwifter();
+
+    static Point direction[4];
 };
 
-MyTrajectoryCreater::MyTrajectoryMessage MyTrajectoryCreater::Create(maptype *_mapData,int _width,int _height,Point _oringin,Point _final)
+MyTrajectoryCreater::MyTrajectoryMessage MyTrajectoryCreater::Create(maptype *_mapData,int _width,int _height,Point p_start,Point p_final)
 {
     pmapData=_mapData;
     width=_width;
     height=_height;
     report.AvoidRadius=0;
-    report.oringin=_oringin;
-    report.final=_final;
+    report.Pfinal=p_final;
+    report.Pstart=p_start;
 
     CreateBoolMap();
     AutoConfigSwifter();
@@ -91,10 +94,10 @@ MyTrajectoryCreater::MyTrajectoryMessage MyTrajectoryCreater::Create(maptype *_m
     {
         cout<<"Succeed\r\n--TrajectoryCreater: Try To Write Trajectory..."<<setw(4)<<(100*(report.step-step)/report.step)<<"%\b\b\b\b\b";
         report.err=false;
-        int px=report.final.x;
-        int py=report.final.y;
+        int px=report.Pstart.x;
+        int py=report.Pstart.y;
         report.Trajectory.push_back(Point{px,py});
-        while(px!=report.oringin.x||py!=report.oringin.y)
+        while(px!=report.Pfinal.x||py!=report.Pfinal.y)
         {
             for (int d=0;d<4;d++)
             {
@@ -128,18 +131,12 @@ int MyTrajectoryCreater::CreateBoolMap()
             boolMap1[i*width+j]=(((pmapData[i*width+j])<midValue)?false:true);
             boolMap2[i*width+j]=(((pmapData[i*width+j])<midValue)?false:true);
         }
-    boolMap1[0]=false;
-    boolMap2[0]=false;
 }
 
 int MyTrajectoryCreater::ExpandMap()
 {
     if(report.AvoidRadius==maxAvoidRadius)
-    {
-        cout<<"--TrajectoryCreater: maxAvoidRadius Reached"<<endl;
         return 1;
-
-    }
     for(int i=0;i<height;i++)
         for(int j=0;j<width;j++)
             if(!(boolMap1[i*width+j]))            //对于某一个障碍物
@@ -163,7 +160,7 @@ int MyTrajectoryCreater::Reachable(bool* boolMap)
     stepMap=new unsigned short[width*height];
     for(long i=0;i<height*width;i++)
         stepMap[i]=Max;                                             //重置
-    stepMap[report.oringin.x+report.oringin.y*width]=0;             //最初步
+    stepMap[report.Pfinal.x+report.Pfinal.y*width]=0;             //最初步
     bool changeFlag=true;
     int direNum=-1;
     while(changeFlag)
@@ -193,6 +190,7 @@ int MyTrajectoryCreater::Reachable(bool* boolMap)
                             int posd=stepMap[py*width+px];
                             if (posd+1<posv)
                             {
+
                                 changeFlag=true;
                                 stepMap[pos]=posd+1;
                             }
@@ -202,9 +200,9 @@ int MyTrajectoryCreater::Reachable(bool* boolMap)
             }
     }
     unsigned short returnvalue;
-    if(stepMap[report.final.x+report.final.y*width]!=Max)
+    if(stepMap[report.Pstart.x+report.Pstart.y*width]!=Max)
     {
-        returnvalue= stepMap[report.final.x+report.final.y*width];
+        returnvalue= stepMap[report.Pstart.x+report.Pstart.y*width];
     }else
         returnvalue= 0;
     return returnvalue;
