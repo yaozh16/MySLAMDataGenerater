@@ -14,13 +14,17 @@ typedef struct
     int y;
 }Point;
 
+
+//读取1bit位图时，值越大表示空地概率越大，障碍概率越小
 class MyBmpReader
 {
 public:
-    MyBmpReader(std::string fileName):fileName(fileName){;}
+    MyBmpReader(std::string fileName,int frameWallWidth=0):fileName(fileName),frameWallWidth(frameWallWidth){;}
     int Read(int &width,int &height,maptype* &mapData,int &channel);
-
 private:
+    void addFrameWall();
+
+    int frameWallWidth;
     maptype ReadOnePixel(ifstream& pf);
     std::string fileName;
     int width;
@@ -35,18 +39,15 @@ int MyBmpReader::Read(int &_width, int &_height, maptype *& _mapData, int &_chan
     ifstream pf;
     int offset;                                  //每行中需要空读的位数
     pf.open(fileName,ios_base::in);
-    cout<<"Opening file...";
+    cout<<"--MyBmpReader: Opening file...";
     if (!pf.is_open())
     {
         cout<<"Fail: File missing or broken"<<endl;
         return 1;                               //文件无法打开
     }
     cout<<"Done"<<endl;
-
-    cout<<"Reading Header...";
     pf.read((char*)&bmFileHeader,sizeof(BITMAPFILEHEADER));
     pf.read((char*)&bmInfoHeader,sizeof(BITMAPINFOHEADER));
-    cout<<"Done"<<endl;
     if (bmInfoHeader.biCompression)
         return 2;                                //暂时不提供解压功能
     _width=width=bmInfoHeader.biWidth;
@@ -60,9 +61,6 @@ int MyBmpReader::Read(int &_width, int &_height, maptype *& _mapData, int &_chan
         offset=step-3*width;
     else if(bmInfoHeader.biBitCount==1)
         offset=8*step-width;
-    cout<<"height=\t"<<height<<endl;
-    cout<<"width=\t"<<width<<endl;
-
     pf.seekg(bmFileHeader.bfOffBits,ios_base::beg); //到达数据位置
     _mapData=new maptype[height*width];
     mapData=_mapData;
@@ -76,6 +74,9 @@ int MyBmpReader::Read(int &_width, int &_height, maptype *& _mapData, int &_chan
             ReadOnePixel(pf);
     }
     pf.close();
+    if (frameWallWidth!=0)
+        addFrameWall();
+    cout<<"--MyBmpReader: Read() Done"<<endl;
     return 0;
 }
 
@@ -102,9 +103,21 @@ maptype MyBmpReader::ReadOnePixel(ifstream& pf)
             num=0;
             pf.read((char*)tem,1);                          //读了8bit
         }
-        return ((tem[0]&bit[num])?maptype(-1):maptype(0));
+        return ((tem[0]&bit[num])?maptype(-1):maptype(0));//1对应于最大概率也就是空地，0对应于最小概率也就是障碍
     }
     else
         system("Pause");
     return -1;
+}
+
+void MyBmpReader::addFrameWall()
+{
+    cout<<"--MyBmpReader: Adding Frame Wall...";
+    for(int w=0;w<frameWallWidth;w++)
+        for(int i=0;i<height;i++)
+            mapData[i*width+w]=mapData[i*width+width-1-w]=maptype(0);
+    for(int w=0;w<frameWallWidth;w++)
+        for(int i=0;i<width;i++)
+            mapData[i+w*width]=mapData[i+(height-1-w)*width]=maptype(0);
+    cout<<"Done"<<endl;
 }
