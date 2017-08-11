@@ -32,3 +32,13 @@ MyBmpReader(std::string fileName,int frameWallWidth=0);
 ```
 int Read(int &width,int &height,maptype* &mapData,int &channel);
 ```
+
+## MyDataGenerater
+
+### 1、作用
+
+构造数据集
+
+ 2、其他
+ 
+ 自己看orz
