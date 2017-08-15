@@ -1,3 +1,9 @@
+//需要修改的参数：
+//halfWheelDistance
+//MaxRangeLength
+//maptype
+//MidVal
+//step
 #ifndef MYDATAGENERATER_H
 #define MYDATAGENERATER_H
 #include <string>
@@ -10,7 +16,9 @@
 #include <vector>
 #include <math.h>
 typedef BYTE maptype;
+
 #define MyDebug true
+
 #define PI 3.1415926535
 //typedef struct
 //{
@@ -27,7 +35,7 @@ private:
     int height;
     maptype* mapData;
     bool* boolMap;
-    int step;
+    int step;       //构造时对于路径点的挑选步长
 public:
     static int MaxRangeLength;                  //Lidar的光线长度范围（所占据的格子数目）
     static double halfWheelDistance;            //轮子之间的距离的一半（所占的格子数目）
@@ -58,7 +66,8 @@ public:
         int* distance;
         Data(int time=0,int size=autoDataSize, int rangeSize=autoDataRangeSize):time(time),size(size),rangeSize(rangeSize){;}
     };
-    MyDataGenerater(int MidVal=127):MidVal(MidVal){step=10;}
+    MyDataGenerater(int MidVal=127,int step=10):MidVal(MidVal),step(step){;}
+    ~MyDataGenerater(){if (boolMap!=NULL) delete boolMap;}
     vector<Data> Generate(int width,int height,maptype* mapData, vector<Point> Trajectory);
     int RangeShow(Data data, Point point, Direction direction,  maptype * mapData,maptype setVal=127);
 };

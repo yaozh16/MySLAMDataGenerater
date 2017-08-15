@@ -19,10 +19,10 @@ public:
     void SetMaxAvoidRadius(int radius){maxAvoidRadius=radius;}
     struct MyTrajectoryMessage
     {
-        bool err;                   //是否出错
-        int step;
-        Point Pfinal;              //起点
-        Point Pstart;                //终点
+        int step;                   //总步数，等于Trajectory.size()
+        bool err;                   //是否出错                  
+        Point Pfinal;               //终点
+        Point Pstart;               //起点
         int AvoidRadius;            //回避半径
         vector<Point> Trajectory;   //路径
     };
