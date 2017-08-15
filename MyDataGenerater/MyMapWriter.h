@@ -12,6 +12,15 @@ using namespace std;
 
 typedef BYTE maptype;
 
+#ifndef STRUCT_POINT
+#define STRUCT_POINT
+typedef struct
+{
+    int x;
+    int y;
+}Point;
+#endif
+
 class MyMapWriter
 {
 public:

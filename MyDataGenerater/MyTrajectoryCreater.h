@@ -6,6 +6,14 @@
 #include <iomanip>
 using maptype=BYTE;
 
+#ifndef STRUCT_POINT
+#define STRUCT_POINT
+typedef struct
+{
+    int x;
+    int y;
+}Point;
+#endif
 
 
 class MyTrajectoryCreater

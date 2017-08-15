@@ -8,11 +8,14 @@ typedef BYTE maptype;
 
 using namespace std;
 
+#ifndef STRUCT_POINT
+#define STRUCT_POINT
 typedef struct
 {
     int x;
     int y;
 }Point;
+#endif
 
 
 //读取1bit位图时，值越大表示空地概率越大，障碍概率越小
